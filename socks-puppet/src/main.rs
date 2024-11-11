@@ -26,8 +26,6 @@ fn handle_client(mut client: TcpStream) -> Result<(), SocksError> {
     
     let version = header[0];
     let nmethods = header[1] as usize;
-    println!("version: {}", version);
-    println!("nmethods: {}", nmethods);
     
     if version != SOCKS_VERSION {
         return Err(SocksError::UnsupportedVersion);
@@ -108,7 +106,7 @@ fn handle_connect(client: &mut TcpStream, target_addr: &str, port: u16) -> Resul
             // Send success response
             let response = [
                 SOCKS_VERSION, 0x00, 0x00, 0x01,
-                192, 168, 178, 81, // Bind address (localhost)
+                0, 0, 0, 0, // Bind address (localhost)
                 (port >> 8) as u8, port as u8, // Bind port
             ];
             client.write_all(&response)?;
