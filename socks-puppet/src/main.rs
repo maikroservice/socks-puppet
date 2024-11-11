@@ -83,6 +83,15 @@ fn handle_client(mut client: TcpStream) -> Result<(), SocksError> {
     client.read_exact(&mut port_bytes)?;
     let port = u16::from_be_bytes(port_bytes);
 
+    // Add request logging
+    let cmd_type = match command {
+        0x01 => "CONNECT",
+        0x02 => "BIND",
+        0x03 => "UDP",
+        _ => "UNKNOWN"
+    };
+    println!("New request: {} {}:{}", cmd_type, target_addr, port);
+
     // Now handle the command with the parsed address and port
     match command {
         0x01 => handle_connect(&mut client, &target_addr, port), // CONNECT
@@ -179,12 +188,13 @@ fn handle_udp(client: &mut TcpStream, _target_addr: &str, _port: u16) -> Result<
 }
 
 fn main() -> io::Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:1080")?;
-    println!("SOCKS5 proxy listening on 127.0.0.1:1080");
+    let listener = TcpListener::bind("0.0.0.0:1080")?;
+    println!("SOCKS5 proxy listening on 0.0.0.0:1080");
     
     for stream in listener.incoming() {
         match stream {
             Ok(client) => {
+                println!("New connection from: {}", client.peer_addr()?);
                 thread::spawn(move || {
                     if let Err(e) = handle_client(client) {
                         eprintln!("Client error: {:?}", e);
